@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contentiq-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: contentiq-api
+  template:
+    metadata:
+      labels:
+        app: contentiq-api
+    spec:
+      containers:
+        - name: contentiq-api
+          image: contentiq:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: CONTENTIQ_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: CONTENTIQ_BLOB_ROOT_PATH
+              value: /mnt/blob
+          volumeMounts:
+            - name: blob-storage
+              mountPath: /mnt/blob
+      volumes:
+        - name: blob-storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: contentiq-api
+spec:
+  selector:
+    app: contentiq-api
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: LoadBalancer
